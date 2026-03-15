@@ -18,13 +18,14 @@ struct SecretCreatedView: View {
             Section("Share Link") {
                 Text(created.shareURL)
                     .font(.system(.footnote, design: .monospaced))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(Theme.sekret800)
                     .textSelection(.enabled)
                     .padding(.vertical, 4)
             }
+            .listRowBackground(Theme.sekret100)
 
             Section {
-                // Primary CTA — native iOS share sheet
+                // Primary CTA
                 Button {
                     showShareSheet = true
                 } label: {
@@ -32,21 +33,22 @@ struct SecretCreatedView: View {
                         Spacer()
                         Label("Share via…", systemImage: "square.and.arrow.up")
                             .bold()
+                            .foregroundStyle(.white)
                         Spacer()
                     }
                 }
+                .listRowBackground(Theme.sekret600)
 
                 Button {
                     UIPasteboard.general.string = created.shareURL
                     isCopied = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        isCopied = false
-                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { isCopied = false }
                 } label: {
                     Label(
                         isCopied ? "Copied!" : "Copy Link",
                         systemImage: isCopied ? "checkmark" : "doc.on.doc"
                     )
+                    .foregroundStyle(isCopied ? Theme.sekret700 : Theme.sekret600)
                 }
             }
 
@@ -54,6 +56,7 @@ struct SecretCreatedView: View {
                 Section("Details") {
                     LabeledContent("Expires") {
                         Text(expire, style: .relative)
+                            .foregroundStyle(Theme.sekret700)
                     }
                 }
             }
@@ -67,10 +70,7 @@ struct SecretCreatedView: View {
                         showDestroyConfirm = true
                     } label: {
                         if isDestroying {
-                            HStack {
-                                ProgressView()
-                                Text("Destroying…")
-                            }
+                            HStack { ProgressView(); Text("Destroying…") }
                         } else {
                             Label("Destroy Now", systemImage: "trash")
                         }
@@ -88,7 +88,6 @@ struct SecretCreatedView: View {
                 Button("Done", action: onDone)
             }
         }
-        // Auto-show share sheet when the link is first created
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                 showShareSheet = true
@@ -103,9 +102,7 @@ struct SecretCreatedView: View {
             isPresented: $showDestroyConfirm,
             titleVisibility: .visible
         ) {
-            Button("Destroy", role: .destructive) {
-                Task { await destroySecret() }
-            }
+            Button("Destroy", role: .destructive) { Task { await destroySecret() } }
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("The secret will be permanently deleted and the link will stop working.")
@@ -118,16 +115,13 @@ struct SecretCreatedView: View {
         } message: {
             Text(destroyError ?? "")
         }
+        .tint(Theme.accent)
     }
 
     private func destroySecret() async {
         isDestroying = true
         do {
-            try await api.deleteSecret(
-                uuid: created.uuid,
-                key: created.key,
-                deleteKey: created.deleteKey
-            )
+            try await api.deleteSecret(uuid: created.uuid, key: created.key, deleteKey: created.deleteKey)
             isDestroyed = true
         } catch {
             destroyError = error.localizedDescription
@@ -136,13 +130,10 @@ struct SecretCreatedView: View {
     }
 }
 
-/// UIKit wrapper for UIActivityViewController — the native iOS share sheet.
 private struct ShareSheet: UIViewControllerRepresentable {
     let items: [Any]
-
     func makeUIViewController(context: Context) -> UIActivityViewController {
         UIActivityViewController(activityItems: items, applicationActivities: nil)
     }
-
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

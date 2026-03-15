@@ -32,6 +32,7 @@ struct ViewSecretView: View {
                 }
             }
         }
+        .tint(Theme.accent)
     }
 
     // MARK: - Sections
@@ -55,9 +56,13 @@ struct ViewSecretView: View {
                         Spacer()
                         Text("Open Link")
                             .bold()
+                            .foregroundStyle(.white)
                         Spacer()
                     }
                 }
+                .listRowBackground(
+                    viewModel.urlText.isEmpty ? Theme.sekret600.opacity(0.5) : Theme.sekret600
+                )
                 .disabled(viewModel.urlText.isEmpty)
             }
 
@@ -65,7 +70,7 @@ struct ViewSecretView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Label("How it works", systemImage: "info.circle")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.sekret700)
                     Text("Paste a link you received from sekret.link. The secret can only be read once — after that the link stops working.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -84,10 +89,12 @@ struct ViewSecretView: View {
                     .foregroundStyle(.secondary)
                 Text(parsed.uuid)
                     .font(.system(.footnote, design: .monospaced))
+                    .foregroundStyle(Theme.sekret800)
                     .textSelection(.enabled)
             }
             .padding(.vertical, 4)
         }
+        .listRowBackground(Theme.sekret100)
 
         Section {
             Button {
@@ -96,8 +103,8 @@ struct ViewSecretView: View {
                 if viewModel.isLoading {
                     HStack {
                         Spacer()
-                        ProgressView()
-                        Text("Fetching…")
+                        ProgressView().tint(.white)
+                        Text("Fetching…").foregroundStyle(.white)
                         Spacer()
                     }
                 } else {
@@ -105,19 +112,19 @@ struct ViewSecretView: View {
                         Spacer()
                         Label("Reveal Secret", systemImage: "eye")
                             .bold()
+                            .foregroundStyle(.white)
                         Spacer()
                     }
                 }
             }
+            .listRowBackground(viewModel.isLoading ? Theme.sekret600.opacity(0.7) : Theme.sekret600)
             .disabled(viewModel.isLoading)
         } footer: {
             Text("The secret will be fetched and decrypted on your device. This may consume the one-time read.")
         }
 
         Section {
-            Button(role: .destructive) {
-                viewModel.reset()
-            } label: {
+            Button(role: .destructive) { viewModel.reset() } label: {
                 Label("Clear", systemImage: "xmark.circle")
             }
         }
@@ -128,22 +135,23 @@ struct ViewSecretView: View {
         Section("Secret") {
             Text(secret)
                 .font(.body)
+                .foregroundStyle(Theme.sekret900)
                 .textSelection(.enabled)
                 .padding(.vertical, 4)
         }
+        .listRowBackground(Theme.sekret50)
 
         Section {
             Button {
                 UIPasteboard.general.string = secret
             } label: {
                 Label("Copy Secret", systemImage: "doc.on.doc")
+                    .foregroundStyle(Theme.sekret600)
             }
         }
 
         Section {
-            Button(role: .destructive) {
-                viewModel.reset()
-            } label: {
+            Button(role: .destructive) { viewModel.reset() } label: {
                 Label("Close & Clear", systemImage: "xmark.circle")
             }
         } footer: {

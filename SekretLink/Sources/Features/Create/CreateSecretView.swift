@@ -48,7 +48,7 @@ struct CreateSecretView: View {
                         if viewModel.isLoading {
                             HStack {
                                 Spacer()
-                                ProgressView()
+                                ProgressView().tint(.white)
                                 Spacer()
                             }
                         } else {
@@ -56,10 +56,16 @@ struct CreateSecretView: View {
                                 Spacer()
                                 Text("Create Secret Link")
                                     .bold()
+                                    .foregroundStyle(.white)
                                 Spacer()
                             }
                         }
                     }
+                    .listRowBackground(
+                        viewModel.isLoading || viewModel.secretText.isEmpty
+                            ? Theme.sekret600.opacity(0.5)
+                            : Theme.sekret600
+                    )
                     .disabled(viewModel.isLoading || viewModel.secretText.isEmpty)
                 }
             }
@@ -91,5 +97,6 @@ struct CreateSecretView: View {
                 }
             }
         }
+        .tint(Theme.accent)
     }
 }
