@@ -59,12 +59,22 @@ enum SecretURLParser {
 
     // MARK: - Validation
 
+    /// Validates the server-side decryption key.
+    /// The server supports two encodings of the 32-byte key:
+    ///   - Hex:    64 lowercase hex characters (0-9a-f)
+    ///   - Base62: 43 alphanumeric characters (0-9a-zA-Z)
     static func isValidServerKey(_ key: String) -> Bool {
-        let len = key.count
-        guard len >= 26 && len <= 27 else { return false }
-        return key.allSatisfy { $0.isLowercase || $0.isNumber }
+        switch key.count {
+        case 64:
+            return key.allSatisfy { $0.isHexDigit }
+        case 43:
+            return key.allSatisfy { $0.isLetter || $0.isNumber }
+        default:
+            return false
+        }
     }
 
+    /// Validates the client-side AES password: 64-char lowercase hex (32 bytes encoded).
     static func isValidClientPassword(_ password: String) -> Bool {
         guard password.count == 64 else { return false }
         return password.allSatisfy { $0.isHexDigit }
