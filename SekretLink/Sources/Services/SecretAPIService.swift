@@ -102,7 +102,21 @@ final class SecretAPIService {
 
     private func decode<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        // Go marshals dates as RFC3339Nano (e.g. "2024-01-15T10:30:00.123456789Z").
+        // Swift's .iso8601 strategy rejects fractional seconds, so we try both formats.
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let string = try decoder.singleValueContainer().decode(String.self)
+            let withFraction = ISO8601DateFormatter()
+            withFraction.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let date = withFraction.date(from: string) { return date }
+            let plain = ISO8601DateFormatter()
+            plain.formatOptions = [.withInternetDateTime]
+            if let date = plain.date(from: string) { return date }
+            throw DecodingError.dataCorruptedError(
+                in: try decoder.singleValueContainer(),
+                debugDescription: "Cannot decode date: \(string)"
+            )
+        }
         do {
             return try decoder.decode(type, from: data)
         } catch {

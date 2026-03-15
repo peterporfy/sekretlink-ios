@@ -5,6 +5,7 @@ struct SecretCreatedView: View {
     let onDone: () -> Void
 
     @State private var isCopied = false
+    @State private var showShareSheet = false
     @State private var showDestroyConfirm = false
     @State private var isDestroying = false
     @State private var destroyError: String?
@@ -23,6 +24,18 @@ struct SecretCreatedView: View {
             }
 
             Section {
+                // Primary CTA — native iOS share sheet
+                Button {
+                    showShareSheet = true
+                } label: {
+                    HStack {
+                        Spacer()
+                        Label("Share via…", systemImage: "square.and.arrow.up")
+                            .bold()
+                        Spacer()
+                    }
+                }
+
                 Button {
                     UIPasteboard.general.string = created.shareURL
                     isCopied = true
@@ -34,10 +47,6 @@ struct SecretCreatedView: View {
                         isCopied ? "Copied!" : "Copy Link",
                         systemImage: isCopied ? "checkmark" : "doc.on.doc"
                     )
-                }
-
-                ShareLink(item: created.shareURL) {
-                    Label("Share…", systemImage: "square.and.arrow.up")
                 }
             }
 
@@ -79,6 +88,16 @@ struct SecretCreatedView: View {
                 Button("Done", action: onDone)
             }
         }
+        // Auto-show share sheet when the link is first created
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                showShareSheet = true
+            }
+        }
+        .sheet(isPresented: $showShareSheet) {
+            ShareSheet(items: [created.shareURL])
+                .presentationDetents([.medium, .large])
+        }
         .confirmationDialog(
             "Destroy this secret?",
             isPresented: $showDestroyConfirm,
@@ -115,4 +134,15 @@ struct SecretCreatedView: View {
         }
         isDestroying = false
     }
+}
+
+/// UIKit wrapper for UIActivityViewController — the native iOS share sheet.
+private struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

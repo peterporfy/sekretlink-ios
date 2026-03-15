@@ -2,7 +2,7 @@ import SwiftUI
 
 struct CreateSecretView: View {
     @StateObject private var viewModel = CreateSecretViewModel()
-    @State private var showCreated = false
+    @FocusState private var isEditorFocused: Bool
 
     var body: some View {
         NavigationStack {
@@ -10,6 +10,7 @@ struct CreateSecretView: View {
                 Section("Secret") {
                     TextEditor(text: $viewModel.secretText)
                         .frame(minHeight: 120)
+                        .focused($isEditorFocused)
                         .overlay(alignment: .topLeading) {
                             if viewModel.secretText.isEmpty {
                                 Text("Enter your secret note or password…")
@@ -41,6 +42,7 @@ struct CreateSecretView: View {
 
                 Section {
                     Button {
+                        isEditorFocused = false
                         Task { await viewModel.submit() }
                     } label: {
                         if viewModel.isLoading {
@@ -61,7 +63,14 @@ struct CreateSecretView: View {
                     .disabled(viewModel.isLoading || viewModel.secretText.isEmpty)
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle("New Secret")
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") { isEditorFocused = false }
+                }
+            }
             .alert("Error", isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
                 set: { if !$0 { viewModel.errorMessage = nil } }

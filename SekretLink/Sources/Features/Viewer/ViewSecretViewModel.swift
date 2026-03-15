@@ -41,7 +41,10 @@ final class ViewSecretViewModel: ObservableObject {
 
         do {
             let secret = try await api.getSecret(uuid: parsed.uuid, key: parsed.serverKey)
-            let plaintext = try crypto.decrypt(secret.data, password: parsed.clientPassword)
+            guard let encryptedData = secret.data, !encryptedData.isEmpty else {
+                throw SecretAPIService.APIError.invalidResponse
+            }
+            let plaintext = try crypto.decrypt(encryptedData, password: parsed.clientPassword)
             revealedSecret = plaintext
         } catch {
             errorMessage = error.localizedDescription

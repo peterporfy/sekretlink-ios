@@ -2,7 +2,7 @@ import Foundation
 
 struct Secret: Codable {
     let uuid: String
-    let data: String
+    var data: String?      // present in GET response only, absent from POST create response
     let created: Date
     var key: String?
     var expire: Date?
