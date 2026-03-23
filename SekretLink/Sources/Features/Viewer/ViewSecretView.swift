@@ -142,12 +142,7 @@ struct ViewSecretView: View {
         .listRowBackground(Theme.sekret50)
 
         Section {
-            Button {
-                UIPasteboard.general.string = secret
-            } label: {
-                Label("Copy Secret", systemImage: "doc.on.doc")
-                    .foregroundStyle(Theme.sekret600)
-            }
+            CopyButton(text: secret, label: "Copy Secret")
         }
 
         Section {

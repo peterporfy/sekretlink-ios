@@ -4,9 +4,9 @@ struct SecretCreatedView: View {
     let created: CreatedSecret
     let onDone: () -> Void
 
-    @State private var isCopied = false
     @State private var showShareSheet = false
     @State private var showDestroyConfirm = false
+    @State private var showNewSecretConfirm = false
     @State private var isDestroying = false
     @State private var destroyError: String?
     @State private var isDestroyed = false
@@ -39,17 +39,7 @@ struct SecretCreatedView: View {
                 }
                 .listRowBackground(Theme.sekret600)
 
-                Button {
-                    UIPasteboard.general.string = created.shareURL
-                    isCopied = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { isCopied = false }
-                } label: {
-                    Label(
-                        isCopied ? "Copied!" : "Copy Link",
-                        systemImage: isCopied ? "checkmark" : "doc.on.doc"
-                    )
-                    .foregroundStyle(isCopied ? Theme.sekret700 : Theme.sekret600)
-                }
+                CopyButton(text: created.shareURL, label: "Copy Link")
             }
 
             if let expire = created.expire {
@@ -80,17 +70,25 @@ struct SecretCreatedView: View {
             } footer: {
                 Text("Destroying immediately deletes the secret so nobody can read it.")
             }
+
+            Section {
+                Button {
+                    if isDestroyed {
+                        onDone()
+                    } else {
+                        showNewSecretConfirm = true
+                    }
+                } label: {
+                    Label("New Secret", systemImage: "plus.circle")
+                        .foregroundStyle(Theme.sekret600)
+                }
+            }
         }
         .navigationTitle("Link Created")
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Done", action: onDone)
-            }
-        }
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                showShareSheet = true
             }
         }
         .sheet(isPresented: $showShareSheet) {
@@ -106,6 +104,16 @@ struct SecretCreatedView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("The secret will be permanently deleted and the link will stop working.")
+        }
+        .confirmationDialog(
+            "Start a new secret?",
+            isPresented: $showNewSecretConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("New Secret", role: .destructive) { onDone() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The current secret is still alive and accessible via the link — but once you leave this screen you won't be able to see the link again.")
         }
         .alert("Error", isPresented: Binding(
             get: { destroyError != nil },
@@ -123,6 +131,7 @@ struct SecretCreatedView: View {
         do {
             try await api.deleteSecret(uuid: created.uuid, key: created.key, deleteKey: created.deleteKey)
             isDestroyed = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) { onDone() }
         } catch {
             destroyError = error.localizedDescription
         }
