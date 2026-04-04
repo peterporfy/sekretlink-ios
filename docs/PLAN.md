@@ -85,7 +85,10 @@ sekretlink-ios/
 │       ├── Info.plist                     CFBundleURLSchemes: sekretlink
 │       └── SekretLink.entitlements        applinks:sekret.link
 ├── .gitignore
-└── README.md
+├── CLAUDE.md
+├── README.md
+└── docs/
+    └── PLAN.md
 ```
 
 ---
